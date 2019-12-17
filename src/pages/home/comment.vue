@@ -1,5 +1,5 @@
 <template>
-  <div v-pageTitle="{content:this.pageTitle}" @touchmove="huadong">
+  <div v-pageTitle="{content:this.pageTitle}">
     <div :class="animateClass">
       <x-header></x-header>
     </div>
@@ -16,9 +16,12 @@
           </div>
         </div>
       </div>
-      <!-- <div class="right">
-      <p :class="shuoData.userGender=='女' ? 'meizi' : ' ' ">关注</p>
-    </div> -->
+      <div class="right_btn" v-if="accid && accid == shuoData.accid">
+        <img src="../../assets/sgd.svg" alt="" @click="right_pop_off=!right_pop_off">
+        <div class="right_pop" v-show="right_pop_off">
+          <p @click="openDel">删除</p>
+        </div>
+      </div>
     </div>
     <div class="content" v-show="domOff">
       <div class="content_s">
@@ -86,7 +89,7 @@
   import loadingItem from '../components/loading.vue'; //loading模块
   import { Popup } from 'mint-ui';
   import { Toast } from 'mint-ui';
-  import { Lazyload } from 'mint-ui';
+  import { Lazyload, MessageBox } from 'mint-ui';
   import { XHeader } from 'vux';
   import store from '../../store';
   import Vue from 'vue';
@@ -144,7 +147,9 @@
         bottomOff: false, //判断到底
         httpNum: 0,
         domOff: false,
-        imgDomain: this.$imgDomain
+        imgDomain: this.$imgDomain,
+        right_pop_off: false,
+        accid: localStorage.CDECY_ACCID,
       }
     },
     //载入组件
@@ -181,6 +186,29 @@
     },
     //方法 数据
     methods: {
+      openDel() {
+        let _this = this;
+        MessageBox.confirm('确定删除吗?').then(() => {
+          var ShuoShuo = Bmob.Object.extend("ShuoShuo");
+          var query = new Bmob.Query("ShuoShuo");
+          query.get(_this.id).then(res => {
+            res.destroy().then(res2 => {
+              Toast(
+              {
+                message: '删除成功~下拉刷新',
+                position: 'center',
+                duration: 2000
+              });
+              this.$router.back();
+            })
+          }).catch(err => {
+            console.log(err)
+          })
+        }).catch((err) => {
+          console.log(err)
+          this.right_pop_off = false;
+        });
+      },
       openReply() {
         var currentUser = Bmob.User.current();
         if (currentUser && localStorage.CDECY_NICKNAME && localStorage.CDECY_USERNAME && localStorage.CDECY_PORTRAIT && localStorage.CDECY_USERGENDER && localStorage.CDECY_USERAGE) {
@@ -275,6 +303,13 @@
             console.log(_this.shuoData)
           },
           error: function(object, error) {
+            _this.loading = false;
+            Toast(
+            {
+              message: '该帖子不存在',
+              position: 'center',
+              duration: 2000
+            });
             console.log("查询失败: " + error.code + " " + error.message);
           }
         });
@@ -628,6 +663,8 @@
     padding: 58px 0 10*@B;
     background: #fff;
     width: 100%;
+    display: flex;
+    justify-content: space-between;
 
     .center {
       padding-left: 10*@B;
@@ -664,6 +701,23 @@
             width: 12*@B;
           }
         }
+      }
+    }
+
+    .right_btn {
+      padding-right: 10*@B;
+      display: flex;
+      align-content: center;
+      position: relative;
+
+      .right_pop {
+        position: absolute;
+        background: #fff;
+        width: 45*@B;
+        top: 50*@B;
+        right: 10*@B;
+        box-shadow: 0 2px 3px #ccc;
+        padding: 5*@B 15*@B;
       }
     }
 
