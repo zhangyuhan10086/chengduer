@@ -76,43 +76,36 @@
           return false;
         };
         _this.loading = true; //开启loading
-        Bmob.User.logIn(_this.username, _this.password, {
-          success: function(user) {
-            _this.loading = false; //关闭loading
-            if (user.get("code") == 101) {
-              Toast({
-                message: '密码或账号有误~',
-                position: 'center',
-                duration: 2000
-              });
+        Bmob.User.login(_this.username, _this.password).then(user => {
+          _this.loading = false; //关闭loading
+          if (user.code == 101) {
+            Toast({
+              message: '密码或账号有误~',
+              position: 'center',
+              duration: 2000
+            });
+          } else {
+            localStorage.CDECY_ACCID = user.objectId; //存下用户id
+            localStorage.CDECY_USERNAME = user.username; //账号
+            if (user.nickName == "" || user.nickName == undefined || user.portrait == "" || user.portrait == undefined || user.userGender == "" || user.userGender == undefined || user.userAge == "" || user.userAge == undefined) {
+              console.log('信息不全');
+              _this.$router.push("/userSet")
             } else {
-              localStorage.CDECY_ACCID = user.id; //存下用户id
-              localStorage.CDECY_USERNAME = user.get("username"); //账号
-              if (user.get("nickName") == "" || user.get("nickName") == undefined || user.get("portrait") == "" || user.get("portrait") == undefined || user.get("userGender") == "" || user.get("userGender") == undefined || user.get("userAge") == "" || user.get("userAge") == undefined) {
-                console.log('信息不全');
-                _this.$router.push("/userSet")
-              } else {
-                localStorage.CDECY_NICKNAME = user.get("nickName"); //昵称
-                localStorage.CDECY_PORTRAIT = user.get("portrait"); //存下头像
-                localStorage.CDECY_USERGENDER = user.get("userGender"); //存下性别
-                localStorage.CDECY_USERAGE = user.get("userAge"); //存下年龄
-                store.commit('uptabArr', { tabArr: 1 });
-                _this.$router.push("/home")
-              };
-              //红点提醒
-              var Remind = Bmob.Object.extend("Remind");
-              var query = new Bmob.Query(Remind);
-              query.equalTo("accid", localStorage.CDECY_ACCID);
-              // 查询所有数据
-              query.find({
-                success: function(obj) {
-                  localStorage.CDECY_REMINDID = obj[0].id; //提醒消息对应id
-                },
-              });
-            }
-          },
-          error: function(user, error) {
-            _this.loading = true; //关闭loading
+              localStorage.CDECY_NICKNAME = user.nickName; //昵称
+              localStorage.CDECY_PORTRAIT = user.portrait; //存下头像
+              localStorage.CDECY_USERGENDER = user.userGender; //存下性别
+              localStorage.CDECY_USERAGE = user.userAge; //存下年龄
+              store.commit('uptabArr', { tabArr: 1 });
+              _this.$router.push("/home")
+            };
+            //红点提醒
+            //var Remind = Bmob.Object.extend("Remind");
+            var query = Bmob.Query('Remind');
+            query.equalTo("accid", '==', localStorage.CDECY_ACCID);
+            // 查询所有数据
+            query.find().then(obj => {
+              localStorage.CDECY_REMINDID = obj[0].objectId; //提醒消息对应id
+            });
           }
         });
 

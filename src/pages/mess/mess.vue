@@ -26,7 +26,6 @@
 </template>
 
 <script>
-  import BScroll from 'better-scroll';
   import loadingItem from '../components/loading.vue'; //loading模块
   import { Popup } from 'mint-ui';
   import { Toast } from 'mint-ui';
@@ -103,25 +102,23 @@
       //==
       //================一开始请求次收提示表
       getRemind() {
-        var Remind = Bmob.Object.extend("Remind");
-        var query = new Bmob.Query(Remind);
+        //var Remind = Bmob.Object.extend("Remind");
+        var query = Bmob.Query('Remind');
         //查询单条数据，第一个参数是这条数据的objectId值
-        query.get(localStorage.CDECY_REMINDID, {
-          success: function(data) {
-            var sysUnread = data.get("sysUnread"); //未读系统消息   
-            var commentUnread = data.get("commentUnread"); //未读被评论消息
-            var aiteUnread = data.get("aiteUnread"); //未读被@的消息
+        query.get(localStorage.CDECY_REMINDID).then(data => {
+          var sysUnread = data.sysUnread; //未读系统消息   
+          var commentUnread = data.commentUnread; //未读被评论消息
+          var aiteUnread = data.aiteUnread; //未读被@的消息
 
-            var totalUnread = sysUnread + commentUnread + aiteUnread; //总未读消息数量
-            store.commit('updateCommentUnreadNum', { commentUnreadNum: commentUnread }); //提交评论数量
-            store.commit('updateSysUnreadNum', { sysUnreadNum: sysUnread }); //提交系统消息数量
-            store.commit('updateaiteUnreadNum', { aiteUnreadNum: aiteUnread }); //提交@消息数量  
-            if (totalUnread != 0) {
-              store.commit('updateHasMess', { hasMess: true }); //提交有未读
-            } else {
-              store.commit('updateHasMess', { hasMess: false }); //提交有未读
-            }
-          },
+          var totalUnread = sysUnread + commentUnread + aiteUnread; //总未读消息数量
+          store.commit('updateCommentUnreadNum', { commentUnreadNum: commentUnread }); //提交评论数量
+          store.commit('updateSysUnreadNum', { sysUnreadNum: sysUnread }); //提交系统消息数量
+          store.commit('updateaiteUnreadNum', { aiteUnreadNum: aiteUnread }); //提交@消息数量  
+          if (totalUnread != 0) {
+            store.commit('updateHasMess', { hasMess: true }); //提交有未读
+          } else {
+            store.commit('updateHasMess', { hasMess: false }); //提交有未读
+          }
         });
       },
     },

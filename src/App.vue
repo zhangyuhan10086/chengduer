@@ -44,9 +44,10 @@
   import { mapState } from 'vuex'
   import loadingItem from './pages/components/loading.vue'
   import store from './store';
-  import Http from './config/Http';
-  BmobSocketIo.initialize("d14353db713716063dfa76f61e7f19e5");
-  Bmob.initialize("d14353db713716063dfa76f61e7f19e5", "1f70df73361fa3a85e6bfd9e9092576f");
+  
+  // var BmobSocketIo = new Bmob.Socket("d14353db713716063dfa76f61e7f19e5")
+  // BmobSocketIo.initialize("d14353db713716063dfa76f61e7f19e5");
+
   import { Tabbar, TabbarItem, ViewBox } from 'vux'
   export default {
     data() {
@@ -73,6 +74,7 @@
       next(vm => {
         var currentUser = Bmob.User.current();
         if (currentUser && localStorage.CDECY_NICKNAME && localStorage.CDECY_USERNAME && localStorage.CDECY_PORTRAIT && localStorage.CDECY_USERGENDER && localStorage.CDECY_USERAGE) {
+          console.log("去home")
           vm.$router.push("/home");
         } else { //没有登录过去登录页面
           // console.log("没有");

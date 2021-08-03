@@ -83,60 +83,73 @@
 
         _this.loading = true; //开启loading
         //创建类和实例（传服务器）
-        var user = new Bmob.User();
-        // var user=new User();
-        user.set("username", _this.username);
-        user.set("password", _this.password);
-        user.signUp(null, {
-          success: function(user) {
-            console.log(user);
-            _this.loading = false; //关闭loading
-            if (user.get("code") == 202) {
-              Toast(
-              {
-                message: '此账号已被注册~',
-                position: 'center',
-                duration: 2000
-              });
+        let params = {
+          username: _this.username,
+          password: _this.password,
+        }
+        Bmob.User.register(params).then(user => {
+          _this.loading = false; //关闭loading
+          if (user.code == 202) {
+            Toast(
+            {
+              message: '此账号已被注册~',
+              position: 'center',
+              duration: 2000
+            });
 
-            } else {
-              Toast(
-              {
-                message: '注册成功~',
-                position: 'center',
-                duration: 2000
-              });
-              var accid = user.id;
-              console.log(accid)
-              var Remind = Bmob.Object.extend("Remind");
-              var remind = new Remind();
-              remind.set('sysUnread', 1); //系统未读
-              remind.set('commentUnread', 0); //未读被评论
-              remind.set('aiteUnread', 0); //未读被@
-              remind.set('accid', accid); //id
-              remind.save(null, {
-                success: function(obj) {
-                  localStorage.CDECY_REMINDID = obj.id; //提醒消息对应id
-                  _this.$router.push({
-                    path: '/login',
-                    query: {
-                      username: _this.username,
-                      password: _this.password
-                    }
-                  }); //跳转去登录
-                },
-                error: function(obj, error) {
-                  // 添加失败
-                  console.log(error.description);
+          } else {
+            Toast(
+            {
+              message: '注册成功~',
+              position: 'center',
+              duration: 2000
+            });
+            var accid = user.objectId;
+            //var Remind = Bmob.Object.extend("Remind");
+            var remind = Bmob.Query('Remind');
+            remind.set('sysUnread', 1); //系统未读
+            remind.set('commentUnread', 0); //未读被评论
+            remind.set('aiteUnread', 0); //未读被@
+            remind.set('accid', accid); //id
+            remind.save().then(obj => {
+              localStorage.CDECY_REMINDID = obj.objectId; //提醒消息对应id
+              _this.$router.push({
+                path: '/login',
+                query: {
+                  username: _this.username,
+                  password: _this.password
                 }
-              });
-            }
-          },
-          error: function(user, error) {
-            console.log(error);
-
+              }); //跳转去登录
+            });
           }
-        });
+          _this.loading = false;
+        }).catch(err => {
+          if (err.code == 202) {
+            Toast(
+            {
+              message: '此账号已被注册~',
+              position: 'center',
+              duration: 2000
+            });
+            _this.loading = false;
+          }
+		})
+		
+
+
+        // var user=new User();
+        // user.set("username", _this.username);
+        // user.set("password", _this.password);
+        // user.signUp(null, {
+        //   success: function(user) {
+        //     console.log(user);
+
+        //   },
+        //   error: function(user, error) {
+        //     console.log(error);
+
+        //   }
+        // });
       },
 
       //===================

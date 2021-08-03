@@ -186,55 +186,47 @@
           return false;
         };
         _this.loading = true; //开启loding
-        var User = Bmob.Object.extend("_User");
-        var query = new Bmob.Query(User);
-        query.equalTo("nickName", _this.userNick);
-        query.find({
-          success: function(results) {
-            if (results.length != 0) {
+        //var User = Bmob.Object.extend("_User");
+        var query = Bmob.Query('_User');
+        query.equalTo("nickName", '==', _this.userNick);
+        query.find().then(results => {
+          if (results.length != 0) {
+            Toast(
+            {
+              message: '此昵称已存在！',
+              position: 'center',
+              duration: 2000
+            });
+            _this.loading = false;
+          } else {
+            //查找此用户修改昵称
+            var twoQuery = Bmob.Query('_User');
+            twoQuery.get(_this.accid).then(user => {
+              _this.loading = false; //关闭loding
+              // 回调中可以取得这个  对象的一个实例，然后就可以修改它了
+              user.set('nickName', _this.userNick); //用户昵称
+              user.set('portrait', _this.portrait); //头像
+              user.set('userGender', _this.userGender); //性别
+              user.set('userAge', _this.userAge); //性别
+              user.save();
+              // The object was retrieved successfully.
+              console.log("提交成功")
+              localStorage.CDECY_NICKNAME = _this.userNick; //存下昵称
+              localStorage.CDECY_PORTRAIT = _this.portrait; //存下头像
+              localStorage.CDECY_USERGENDER = _this.userGender; //存下性别
+              localStorage.CDECY_USERAGE = _this.userAge; //存下年龄
+              store.commit('uptabArr', { tabArr: 1 });
+              _this.$router.push("/home")
+            }).catch(error => {
+              _this.loading = false; //关闭loding
+              //添加失败
               Toast(
               {
-                message: '此昵称已存在！',
+                message: '哎呀，服务器君好像有小情绪~',
                 position: 'center',
                 duration: 2000
               });
-            } else {
-              //查找此用户修改昵称
-              var twoQuery = new Bmob.Query(User);
-              twoQuery.get(_this.accid, {
-                success: function(user) {
-                  _this.loading = false; //关闭loding
-                  // 回调中可以取得这个  对象的一个实例，然后就可以修改它了
-                  user.set('nickName', _this.userNick); //用户昵称
-                  user.set('portrait', _this.portrait); //头像
-                  user.set('userGender', _this.userGender); //性别
-                  user.set('userAge', _this.userAge); //性别
-                  user.save();
-                  // The object was retrieved successfully.
-                  console.log("提交成功")
-                  localStorage.CDECY_NICKNAME = _this.userNick; //存下昵称
-                  localStorage.CDECY_PORTRAIT = _this.portrait; //存下头像
-                  localStorage.CDECY_USERGENDER = _this.userGender; //存下性别
-                  localStorage.CDECY_USERAGE = _this.userAge; //存下年龄
-                  store.commit('uptabArr', { tabArr: 1 });
-                  _this.$router.push("/home")
-                },
-                error: function(object, error) {
-                  _this.loading = false; //关闭loding
-                  //添加失败
-                  Toast(
-                  {
-                    message: '哎呀，服务器君好像有小情绪~',
-                    position: 'center',
-                    duration: 2000
-                  });
-                  console.log('添加数据失败,返回错误信息：' + error.description);
-                }
-              });
-            }
-          },
-          error: function(error) {
-            console.log("查询失败: " + error.code + " " + error.message);
+            });
           }
         });
       },

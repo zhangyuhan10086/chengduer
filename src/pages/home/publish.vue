@@ -38,7 +38,6 @@
 </template>
 
 <script>
-  import Http from '../../config/Http';
   import { Popup } from 'mint-ui';
   import Vue from 'vue';
   import BScroll from 'better-scroll';
@@ -60,7 +59,7 @@
         content: "", //说说文字
         popupVisible: false, //控制popuup显示和关闭
         dataNumber: 10, //标签每次显示的数量
-        skip: "", //配合dataNumber
+        skip: 0, //配合dataNumber
         tipsDataJson: [], //标签数据
         type: "", //标签类型
         zydTipData: "", //自定义标签
@@ -308,53 +307,32 @@
         _this.loading = true; //开启加载
         //============标签热度加1 先查找有无此标签
 
-        var Tips = Bmob.Object.extend("Tips");
-        var query = new Bmob.Query(Tips);
-        query.equalTo("tipName", _this.type);
+        //var Tips = Bmob.Object.extend("Tips");
+        var query = Bmob.Query('Tips');
+        query.equalTo("tipName", '==', _this.type);
         // 查询所有数据
-        query.find({
-          success: function(results) {
-            //没有，创建一个新的
-            if (results.length == 0) {
-              _this.tipHot = 1; //没有那么热度为1
-              var tip = new Tips();
-              tip.save({
-                tipName: _this.type, //标签名
-                tipHot: 1, //热度1
-              }, {
-                success: function(tip) {
-                  console.log("创建新标签成功")
-                },
-                error: function(tip, error) {
-                  console.log("创建新标签失败")
-                }
-              });
-              _this.saveContent(); //进行保存
-            } else {
-              var hot = results[0].get("tipHot");
-              var id = results[0].id;
-              console.log(hot)
-              console.log(id)
-              hot++;
-              _this.tipHot = hot;
-              // 这个 id 是要修改条目的 id，你在生成这个存储并成功时可以获取到，请看前面的文档
-              query.get(id, {
-                success: function(tipItem) {
-                  // 回调中可以取得这个 GameScore 对象的一个实例，然后就可以修改它了
-                  tipItem.set('tipHot', hot);
-                  tipItem.save();
-                  // The object was retrieved successfully.
-                },
-                error: function(object, error) {
-                  console.log("加热度失败")
-                }
-              });
-              _this.saveContent(); //进行保存       
-              console.log("标签热度加1")
-            }
-          },
-          error: function(error) {
-            console.log("查询失败: " + error.code + " " + error.message);
+        query.find().then(results => {
+          //没有，创建一个新的
+          if (results.length == 0) {
+            _this.tipHot = 1; //没有那么热度为1
+            query.save({
+              tipName: _this.type, //标签名
+              tipHot: 1, //热度1
+            });
+            _this.saveContent(); //进行保存
+          } else {
+            var hot = results[0].tipHot;
+            var id = results[0].objectId;
+            hot++;
+            _this.tipHot = hot;
+            console.log("results", results)
+            // 这个 id 是要修改条目的 id，你在生成这个存储并成功时可以获取到，请看前面的文档
+            query.get(id).then(tipItem => {
+              tipItem.set('tipHot', hot);
+              tipItem.save();
+            });
+            _this.saveContent(); //进行保存       
+            console.log("标签热度加1")
           }
         });
       },
@@ -363,8 +341,8 @@
         //保存发布的说说内容
         //创建类和实例（传服务器）
         let _this = this;
-        var Shuoshuo = Bmob.Object.extend("ShuoShuo");
-        var shuo = new Shuoshuo();
+        // var Shuoshuo = Bmob.Object.extend("ShuoShuo");
+        var shuo = Bmob.Query('ShuoShuo');
         let addPicsUrl = _this.addPics.map(item => {
           return item.url
         })
@@ -379,61 +357,52 @@
           type: _this.type, //    标签
           tipHot: _this.tipHot, //标签热度
           commentNum: 0, //评论数量
-        }, {
-          success: function(shuo) {
-            //添加成功，返回成功之后的objectId（注意：返回的属性名字是id，不是objectId），你还可以在Bmob的Web管理后台看到对应的数据
-            console.log('添加数据成功，返回的objectId是：' + shuo.id);
-            _this.loading = false; //关闭加载
-            Toast(
-            {
-              message: '下拉刷新获取刚才发布的内容~',
-              position: 'center',
-              duration: 2000
-            });
-            _this.$router.push('/home')
-          },
-          error: function(shuo, error) {
-            //添加失败
-            Toast(
-            {
-              message: '哎呀，服务器君好像有小情绪~',
-              position: 'center',
-              duration: 2000
-            });
-            _this.loading = false; //关闭加载
-            console.log('添加数据失败，返回错误信息：' + error.description);
-          }
+        }).then(res => {
+          //添加成功，返回成功之后的objectId（注意：返回的属性名字是id，不是objectId），你还可以在Bmob的Web管理后台看到对应的数据
+          console.log('添加数据成功，返回的objectId是：' + res.id);
+          _this.loading = false; //关闭加载
+          Toast(
+          {
+            message: '下拉刷新获取刚才发布的内容~',
+            position: 'center',
+            duration: 2000
+          });
+          _this.$router.push('/home')
+        }).catch(error => {
+          //添加失败
+          Toast(
+          {
+            message: '哎呀，服务器君好像有小情绪~',
+            position: 'center',
+            duration: 2000
+          });
+          _this.loading = false; //关闭加载
+          console.log('添加数据失败，返回错误信息：' + error.description);
         });
       },
 
       //获得标签
       getTipsData() {
         let _this = this;
-        var Tips = Bmob.Object.extend("Tips");
-        var query = new Bmob.Query(Tips);
+        // var Tips = Bmob.Object.extend("Tips");
+        var query = Bmob.Query('Tips');
 
         query.limit(_this.dataNumber);
         query.skip(_this.skip);
-        query.descending("tipHot");
-        query.find({
-          success: function(results) {
-            _this.skip += _this.dataNumber;
-            // 循环处理查询到的数据
-            for (var i = 0; i < results.length; i++) {
-              var object = results[i];
-              var data = {
-                tipName: "", //标签名称
-                tipHot: "", //标签热度
-                checked: false, //默认没被选中
-              }
-              data.tipName = results[i].get("tipName");
-              data.tipHot = results[i].get("tipHot");
-              _this.tipsDataJson.push(data);
-            };
-          },
-          error: function(error) {
-            console.log("查询失败: " + error.code + " " + error.message);
-          }
+        query.order("-tipHot");
+        query.find().then(results => {
+          _this.skip += _this.dataNumber;
+          // 循环处理查询到的数据
+          for (var i = 0; i < results.length; i++) {
+            var data = {
+              tipName: "", //标签名称
+              tipHot: "", //标签热度
+              checked: false, //默认没被选中
+            }
+            data.tipName = results[i].tipName;
+            data.tipHot = results[i].tipHot;
+            _this.tipsDataJson.push(data);
+          };
         })
       },
       //==============选择标签
@@ -458,18 +427,6 @@
         _this.type = "";
         console.log(_this.type)
       },
-      //=========newbetterSCroll
-      initScroll() {
-        this.domScroll = new BScroll(this.$refs.domx, {
-          startX: 0,
-          startY: 0,
-          scrollY: true,
-          momentum: true,
-          bounce: false,
-          deceleration: 0.001
-        })
-      },
-
     }
   }
 </script>

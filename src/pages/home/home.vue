@@ -65,12 +65,12 @@
 </template>
 
 <script>
+  //import Bmob from 'hydrogen-js-sdk'
   import Vue from 'vue'
   import { Toast } from 'mint-ui';
   import { InfiniteScroll } from 'mint-ui';
   import { Loadmore } from 'mint-ui';
   import { Spinner } from 'mint-ui';
-  import { Lazyload } from 'mint-ui';
   import loadingItem from '../components/loading.vue' //自己写的loding组件
   import store from '../../store';
   Vue.use(InfiniteScroll);
@@ -91,6 +91,10 @@
   import touxiang12 from "../../assets/touxiang12.jpg"
 
 
+
+  //var BmobSocketIo = new Bmob.Socket()
+
+
   export default {
     data() {
       return {
@@ -107,7 +111,7 @@
         scrollArr: [], //记录滚动条位置判断是向上滑还是向下滑
         type: "", //标签类型
         zyhloading: true, //全屏加载动画
-        imgDomain: this.$imgDomain
+        imgDomain: this.$imgDomain,
       }
     },
     //路由离开时钩子
@@ -122,17 +126,21 @@
       loadingItem,
 
     },
+    watch: {
+
+    },
     //computed计算，数据
     computed: {
 
     },
     //mounted 安装，类型function，默认执行 钩子，
     mounted() {
+      console.log(Bmob)
       console.log("home mounted")
       this.initStyle();
-      this.socketId();
+      //this.socketId();
       this.getShuoData();
-      this.getRemind();
+      //this.getRemind();
     },
     //方法 数据
     methods: {
@@ -197,96 +205,88 @@
       //获得说说数据
       getShuoData() {
         let _this = this;
-        var ShuoShuo = Bmob.Object.extend("ShuoShuo");
-        var query = new Bmob.Query(ShuoShuo);
+        // var ShuoShuo = Bmob.Object.extend("ShuoShuo");
+        var query = Bmob.Query('ShuoShuo');
         if (_this.type) {
           query.equalTo("type", _this.type); //按类型搜索
 
         };
         query.limit(_this.dataNumber);
         query.skip(_this.skip);
-        query.descending("updatedAt");
-        query.find({
-          success: function(results) {
-            _this.zyhloading = false; //请求到数据关闭加载动画
-            _this.skip += _this.dataNumber;
-            _this.moreLoading = true; //底下loding图标开关
-            // _this.loading=false;
-            _this.$refs.loadmore.onTopLoaded();
-            if (results.length == 0) {
-              Toast({
-                message: '已无更多数据~',
-                position: 'center',
-                duration: 2000
-              });
-              _this.loading = true;
-            }
-            // 循环处理查询到的数据
-            for (var i = 0; i < results.length; i++) {
-              var object = results[i];
-              var data = {
-                content: "", //文字内容
-                name: "", //发言的用户名字
-                picList: [], //发布的图片
-                createAt: "", //发布的时间
-                clname: "", //classname判断几张图样式不一样
-                portrait: "", //头像
-                id: "",
-                accid: "",
-              };
-              var content = results[i].get("content");
-              data.content = content.length > 60 ? content.substr(0, 60) + "..." : content; //文字内容
-              data.name = results[i].get("name"); //发言的用户名字
-              data.picList = results[i].get("picList"); //发布的图片
-              data.portrait = results[i].get("portrait"); //头像
-              data.type = results[i].get("type"); //标签类型
-              data.tipHot = results[i].get("tipHot"); //标签热度
-              data.id = results[i].id; //标签热度
-              data.commentNum = results[i].get("commentNum") //评论数量
-              data.accid = results[i].get("accid") //评论数量
-              data.userGender = results[i].get("userGender"); //用户性别
-              if (data.picList && data.picList.length == 1) {
-                data.clname = "picOne"
-              } else if (data.picList && data.picList.length == 2) {
-                data.clname = "picTwo"
-              } else if (data.picList && data.picList.length >= 2) {
-                data.clname = "picThree"
-              };
-              //头像转换
-              if (data.portrait == 1) {
-                data.portrait = touxiang1
-              } else if (data.portrait == 2) {
-                data.portrait = touxiang2
-              } else if (data.portrait == 3) {
-                data.portrait = touxiang3
-              } else if (data.portrait == 4) {
-                data.portrait = touxiang4
-              } else if (data.portrait == 5) {
-                data.portrait = touxiang5
-              } else if (data.portrait == 6) {
-                data.portrait = touxiang6
-              } else if (data.portrait == 7) {
-                data.portrait = touxiang7
-              } else if (data.portrait == 8) {
-                data.portrait = touxiang8
-              } else if (data.portrait == 9) {
-                data.portrait = touxiang9
-              } else if (data.portrait == 10) {
-                data.portrait = touxiang10
-              } else if (data.portrait == 11) {
-                data.portrait = touxiang11
-              } else if (data.portrait == 12) {
-                data.portrait = touxiang12
-              };
-
-              data.createAt = results[i].createdAt;
-              _this.shuoData.push(data);
-
-            };
-          },
-          error: function(error) {
-            console.log("查询失败: " + error.code + " " + error.message);
+        query.order("-updatedAt");
+        query.find().then(results => {
+          _this.zyhloading = false; //请求到数据关闭加载动画
+          _this.skip += _this.dataNumber;
+          _this.moreLoading = true; //底下loding图标开关
+          // _this.loading=false;
+          _this.$refs.loadmore.onTopLoaded();
+          if (results.length == 0) {
+            Toast({
+              message: '已无更多数据~',
+              position: 'center',
+              duration: 2000
+            });
+            _this.loading = true;
           }
+          // 循环处理查询到的数据
+          for (var i = 0; i < results.length; i++) {
+            var data = {
+              content: "", //文字内容
+              name: "", //发言的用户名字
+              picList: [], //发布的图片
+              createAt: "", //发布的时间
+              clname: "", //classname判断几张图样式不一样
+              portrait: "", //头像
+              id: "",
+              accid: "",
+            };
+            var content = results[i].content;
+            data.content = content.length > 60 ? content.substr(0, 60) + "..." : content; //文字内容
+            data.name = results[i].name; //发言的用户名字
+            data.picList = results[i].picList; //发布的图片
+            data.portrait = results[i].portrait; //头像
+            data.type = results[i].type; //标签类型
+            data.tipHot = results[i].tipHot; //标签热度
+            data.id = results[i].objectId; //标签热度
+            data.commentNum = results[i].commentNum //评论数量
+            data.accid = results[i].accid //评论数量
+            data.userGender = results[i].userGender; //用户性别
+            if (data.picList && data.picList.length == 1) {
+              data.clname = "picOne"
+            } else if (data.picList && data.picList.length == 2) {
+              data.clname = "picTwo"
+            } else if (data.picList && data.picList.length >= 2) {
+              data.clname = "picThree"
+            };
+            //头像转换
+            if (data.portrait == 1) {
+              data.portrait = touxiang1
+            } else if (data.portrait == 2) {
+              data.portrait = touxiang2
+            } else if (data.portrait == 3) {
+              data.portrait = touxiang3
+            } else if (data.portrait == 4) {
+              data.portrait = touxiang4
+            } else if (data.portrait == 5) {
+              data.portrait = touxiang5
+            } else if (data.portrait == 6) {
+              data.portrait = touxiang6
+            } else if (data.portrait == 7) {
+              data.portrait = touxiang7
+            } else if (data.portrait == 8) {
+              data.portrait = touxiang8
+            } else if (data.portrait == 9) {
+              data.portrait = touxiang9
+            } else if (data.portrait == 10) {
+              data.portrait = touxiang10
+            } else if (data.portrait == 11) {
+              data.portrait = touxiang11
+            } else if (data.portrait == 12) {
+              data.portrait = touxiang12
+            };
+            data.createAt = results[i].createdAt;
+            _this.shuoData.push(data);
+          };
         })
       },
       //向下滑动隐藏发布按钮，向上滑动出现按钮
@@ -350,8 +350,8 @@
 
       //================一开始请求次收提示表
       getRemind() {
-        var Remind = Bmob.Object.extend("Remind");
-        var query = new Bmob.Query(Remind);
+        // var Remind = Bmob.Object.extend("Remind");
+        var query = Bmob.Query('Remind');
         //查询单条数据，第一个参数是这条数据的objectId值
         query.get(localStorage.CDECY_REMINDID, {
           success: function(data) {
@@ -382,9 +382,8 @@
     activated() {
       console.log('再次进入Home')
       this.returnScrollValue();
-      this.socketId();
-      this.getRemind();
-      // background:#36465d; 
+      //this.socketId();
+      //this.getRemind();
     },
 
   }

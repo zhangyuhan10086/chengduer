@@ -35,7 +35,6 @@
 </template>
 
 <script>
-  import BScroll from 'better-scroll';
   import loadingItem from '../components/loading.vue'; //loading模块
   import zanwuItem from '../components/zanwu.vue'; //zanwu模块
   import { Popup } from 'mint-ui';
@@ -121,75 +120,69 @@
       //获得被评论的消息
       getCommentData() {
         let _this = this;
-        var CommentData = Bmob.Object.extend("Comment");
-        var query = new Bmob.Query(CommentData);
-        query.equalTo("receiveAccid", localStorage.CDECY_ACCID);
-        query.notEqualTo("louzhuId", localStorage.CDECY_ACCID);
+        //var CommentData = Bmob.Object.extend("Comment");
+        var query = Bmob.Query('Comment');
+        query.equalTo("receiveAccid", '==', localStorage.CDECY_ACCID);
+        query.equalTo("louzhuId", '!=', localStorage.CDECY_ACCID);
         query.limit(_this.dataNumber);
         query.skip(_this.skip);
-        query.descending("createdAt");
+        query.order("-createdAt");
         // 查询所有数据
-        query.find({
-          success: function(results) {
-            _this.zyhloading = false; //关闭loading
-            _this.skip += _this.dataNumber;
-            _this.moreLoading = true; //底下loding图标开关
-            if (results.length == 0 && _this.commentJson.length != 0) {
-              Toast(
-              {
-                message: '已无更多评论',
-                position: 'center',
-                duration: 2000
-              });
-              _this.skip = _this.commentJson.length;
+        query.find().then(results => {
+          _this.zyhloading = false; //关闭loading
+          _this.skip += _this.dataNumber;
+          _this.moreLoading = true; //底下loding图标开关
+          if (results.length == 0 && _this.commentJson.length != 0) {
+            Toast(
+            {
+              message: '已无更多评论',
+              position: 'center',
+              duration: 2000
+            });
+            _this.skip = _this.commentJson.length;
+          };
+          // 循环处理查询到的数据
+          for (var i = 0; i < results.length; i++) {
+            var data = {
+              commentfont: results[i].commentfont,
+              sponsorAccid: results[i].sponsorAccid, //发起人accid
+              sponsorName: results[i].sponsorName, //发起人名字
+              sponsorGender: results[i].sponsorGender, //发起人性别
+              sponsorPortrait: results[i].sponsorPortrait, //发起人头像
+              shuoId: results[i].shuoId, //对应的说说id
+              date: results[i].createdAt, //日期
             };
-            // 循环处理查询到的数据
-            for (var i = 0; i < results.length; i++) {
-              var object = results[i];
-              var data = {
-                commentfont: results[i].get("commentfont"),
-                sponsorAccid: results[i].get("sponsorAccid"), //发起人accid
-                sponsorName: results[i].get("sponsorName"), //发起人名字
-                sponsorGender: results[i].get("sponsorGender"), //发起人性别
-                sponsorPortrait: results[i].get("sponsorPortrait"), //发起人头像
-                shuoId: results[i].get("shuoId"), //对应的说说id
-                date: results[i].createdAt, //日期
-              };
 
-              if (data.sponsorPortrait == 1) {
-                data.sponsorPortrait = touxiang1
-              } else if (data.sponsorPortrait == 2) {
-                data.sponsorPortrait = touxiang2
-              } else if (data.sponsorPortrait == 3) {
-                data.sponsorPortrait = touxiang3
-              } else if (data.sponsorPortrait == 4) {
-                data.sponsorPortrait = touxiang4
-              } else if (data.sponsorPortrait == 5) {
-                data.sponsorPortrait = touxiang5
-              } else if (data.sponsorPortrait == 6) {
-                data.sponsorPortrait = touxiang6
-              } else if (data.sponsorPortrait == 7) {
-                data.sponsorPortrait = touxiang7
-              } else if (data.sponsorPortrait == 8) {
-                data.sponsorPortrait = touxiang8
-              } else if (data.sponsorPortrait == 9) {
-                data.sponsorPortrait = touxiang9
-              } else if (data.sponsorPortrait == 10) {
-                data.sponsorPortrait = touxiang10
-              } else if (data.sponsorPortrait == 11) {
-                data.sponsorPortrait = touxiang11
-              } else if (data.sponsorPortrait == 12) {
-                data.sponsorPortrait = touxiang12
-              }
+            if (data.sponsorPortrait == 1) {
+              data.sponsorPortrait = touxiang1
+            } else if (data.sponsorPortrait == 2) {
+              data.sponsorPortrait = touxiang2
+            } else if (data.sponsorPortrait == 3) {
+              data.sponsorPortrait = touxiang3
+            } else if (data.sponsorPortrait == 4) {
+              data.sponsorPortrait = touxiang4
+            } else if (data.sponsorPortrait == 5) {
+              data.sponsorPortrait = touxiang5
+            } else if (data.sponsorPortrait == 6) {
+              data.sponsorPortrait = touxiang6
+            } else if (data.sponsorPortrait == 7) {
+              data.sponsorPortrait = touxiang7
+            } else if (data.sponsorPortrait == 8) {
+              data.sponsorPortrait = touxiang8
+            } else if (data.sponsorPortrait == 9) {
+              data.sponsorPortrait = touxiang9
+            } else if (data.sponsorPortrait == 10) {
+              data.sponsorPortrait = touxiang10
+            } else if (data.sponsorPortrait == 11) {
+              data.sponsorPortrait = touxiang11
+            } else if (data.sponsorPortrait == 12) {
+              data.sponsorPortrait = touxiang12
+            }
 
 
-              _this.commentJson.push(data);
-            };
-            _this.zanwuOff = _this.commentJson.length == 0 ? true : false;
-          },
-          error: function(error) {
-            console.log("查询失败: " + error.code + " " + error.message);
-          }
+            _this.commentJson.push(data);
+          };
+          _this.zanwuOff = _this.commentJson.length == 0 ? true : false;
         });
       },
       //去原帖
@@ -203,16 +196,14 @@
       },
       //清空未读提醒
       clearRemind() {
-        var Remind = Bmob.Object.extend("Remind");
-        var query = new Bmob.Query(Remind);
+        // var Remind = Bmob.Object.extend("Remind");
+        var query = Bmob.Query('Remind');
         //查询单条数据，第一个参数是这条数据的objectId值
-        query.get(localStorage.CDECY_REMINDID, {
-          success: function(remind) {
-            // 查询成功，调用get方法获取对应属性的值
-            remind.fetchWhenSave(true);
-            remind.set("aiteUnread", 0);
-            remind.save();
-          },
+        query.get(localStorage.CDECY_REMINDID).then(remind => {
+          // 查询成功，调用get方法获取对应属性的值
+          //remind.fetchWhenSave(true);
+          remind.set("aiteUnread", 0);
+          remind.save();
         });
       },
     }

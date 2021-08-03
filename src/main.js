@@ -35,7 +35,14 @@ Vue.use(VueResource)
 //指令
 import directive from './directive/index'
 
-// FastClick.attach(document.body)
+
+
+import Bmob from "hydrogen-js-sdk";
+
+Bmob.initialize("d14353db713716063dfa76f61e7f19e5", "1f70df73361fa3a85e6bfd9e9092576f");
+
+
+
 
 Vue.config.productionTip = false
 

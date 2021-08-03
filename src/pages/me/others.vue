@@ -50,10 +50,7 @@
 </template>
 
 <script>
-  import BScroll from 'better-scroll';
   import { XHeader } from 'vux';
-  import { Lazyload } from 'mint-ui';
-  import { MessageBox } from 'mint-ui';
   import { Toast } from 'mint-ui';
   import loadingItem from '../components/loading.vue'; //loading模块
 
@@ -121,110 +118,100 @@
       //获得个人资料
       getUserInfo() {
         let _this = this;
-        var User = Bmob.Object.extend("_User");
-        var query = new Bmob.Query(User);
+        //var User = Bmob.Object.extend("_User");
+        var query = Bmob.Query('_User');
         //查询单条数据，第一个参数是这条数据的objectId值
-        query.get(_this.accid, {
-          success: function(obj) {
-            _this.toTop();
-            _this.domOff = true; //展示页面
-            // 查询成功，调用get方法获取对应属性的值
-            _this.userInfo.portrait = obj.get("portrait");
-            _this.userInfo.nickName = obj.get("nickName");
-            _this.userInfo.userGender = obj.get("userGender");
-            _this.userInfo.userAge = obj.get("userAge");
+        query.get(_this.accid).then(obj => {
+          _this.toTop();
+          _this.domOff = true; //展示页面
+          // 查询成功，调用get方法获取对应属性的值
+          _this.userInfo.portrait = obj.portrait;
+          _this.userInfo.nickName = obj.nickName;
+          _this.userInfo.userGender = obj.userGender;
+          _this.userInfo.userAge = obj.userAge;
 
 
-            if (_this.userInfo.portrait == 1) {
-              _this.userInfo.portrait = touxiang1
-            } else if (_this.userInfo.portrait == 2) {
-              _this.userInfo.portrait = touxiang2
-            } else if (_this.userInfo.portrait == 3) {
-              _this.userInfo.portrait = touxiang3
-            } else if (_this.userInfo.portrait == 4) {
-              _this.userInfo.portrait = touxiang4
-            } else if (_this.userInfo.portrait == 5) {
-              _this.userInfo.portrait = touxiang5
-            } else if (_this.userInfo.portrait == 6) {
-              _this.userInfo.portrait = touxiang6
-            } else if (_this.userInfo.portrait == 7) {
-              _this.userInfo.portrait = touxiang7
-            } else if (_this.userInfo.portrait == 8) {
-              _this.userInfo.portrait = touxiang8
-            } else if (_this.userInfo.portrait == 9) {
-              _this.userInfo.portrait = touxiang9
-            } else if (_this.userInfo.portrait == 10) {
-              _this.userInfo.portrait = touxiang10
-            } else if (_this.userInfo.portrait == 11) {
-              _this.userInfo.portrait = touxiang11
-            } else if (_this.userInfo.portrait == 12) {
-              _this.userInfo.portrait = touxiang12
-            }
-
-
-          },
+          if (_this.userInfo.portrait == 1) {
+            _this.userInfo.portrait = touxiang1
+          } else if (_this.userInfo.portrait == 2) {
+            _this.userInfo.portrait = touxiang2
+          } else if (_this.userInfo.portrait == 3) {
+            _this.userInfo.portrait = touxiang3
+          } else if (_this.userInfo.portrait == 4) {
+            _this.userInfo.portrait = touxiang4
+          } else if (_this.userInfo.portrait == 5) {
+            _this.userInfo.portrait = touxiang5
+          } else if (_this.userInfo.portrait == 6) {
+            _this.userInfo.portrait = touxiang6
+          } else if (_this.userInfo.portrait == 7) {
+            _this.userInfo.portrait = touxiang7
+          } else if (_this.userInfo.portrait == 8) {
+            _this.userInfo.portrait = touxiang8
+          } else if (_this.userInfo.portrait == 9) {
+            _this.userInfo.portrait = touxiang9
+          } else if (_this.userInfo.portrait == 10) {
+            _this.userInfo.portrait = touxiang10
+          } else if (_this.userInfo.portrait == 11) {
+            _this.userInfo.portrait = touxiang11
+          } else if (_this.userInfo.portrait == 12) {
+            _this.userInfo.portrait = touxiang12
+          }
         });
       },
 
       //获得说说数据
       getShuoData() {
         let _this = this;
-        var ShuoShuo = Bmob.Object.extend("ShuoShuo");
-        var query = new Bmob.Query(ShuoShuo);
-        query.equalTo("accid", _this.accid); //按类型搜索
+        // var ShuoShuo = Bmob.Object.extend("ShuoShuo");
+        var query = Bmob.Query('ShuoShuo');
+        query.equalTo("accid", '==', _this.accid); //按类型搜索
         query.limit(_this.dataNumber);
         query.skip(_this.skip);
-        query.descending("createdAt");
-        query.find({
-          success: function(results) {
-            _this.zyhloading = false; //请求到数据关闭加载动画
-            _this.skip += _this.dataNumber;
-            _this.moreLoading = true; //底下loding图标开关
-            // _this.loading=false;
-            // _this.$refs.loadmore.onTopLoaded();
-            if (results.length == 0 && _this.shuoData.length != 0) {
-              Toast({
-                message: '已无更多数据~',
-                position: 'center',
-                duration: 2000
-              });
-              // _this.loading=true;
-            }
-            // 循环处理查询到的数据
-            for (var i = 0; i < results.length; i++) {
-              var object = results[i];
-              var data = {
-                content: "", //文字内容
-                name: "", //发言的用户名字
-                picList: [], //发布的图片
-                createAt: "", //发布的时间
-                clname: "", //classname判断几张图样式不一样
-                portrait: "", //头像
-                id: "",
-              }
-              data.content = results[i].get("content"); //文字内容
-              data.name = results[i].get("name"); //发言的用户名字
-              data.picList = results[i].get("picList"); //发布的图片
-              data.portrait = results[i].get("portrait"); //头像
-              data.type = results[i].get("type"); //标签类型
-              data.tipHot = results[i].get("tipHot"); //标签热度
-              data.id = results[i].id; //id
-              data.commentNum = results[i].get("commentNum") //评论数量
-              if (data.picList && data.picList.length == 1) {
-                data.clname = "picOne"
-              } else if (data.picList && data.picList.length == 2) {
-                data.clname = "picTwo"
-              } else if (data.picList && data.picList.length >= 2) {
-                data.clname = "picThree"
-              };
-              data.createAt = results[i].createdAt;
-              _this.shuoData.push(data);
-            };
-            _this.zanwuOff = _this.shuoData.length == 0 ? true : false;
-          },
-          error: function(error) {
-            console.log("查询失败: " + error.code + " " + error.message);
+        query.order("-createdAt");
+        query.find().then(results => {
+          _this.zyhloading = false; //请求到数据关闭加载动画
+          _this.skip += _this.dataNumber;
+          _this.moreLoading = true; //底下loding图标开关
+          // _this.loading=false;
+          // _this.$refs.loadmore.onTopLoaded();
+          if (results.length == 0 && _this.shuoData.length != 0) {
+            Toast({
+              message: '已无更多数据~',
+              position: 'center',
+              duration: 2000
+            });
+            // _this.loading=true;
           }
+          // 循环处理查询到的数据
+          for (var i = 0; i < results.length; i++) {
+            var data = {
+              content: "", //文字内容
+              name: "", //发言的用户名字
+              picList: [], //发布的图片
+              createAt: "", //发布的时间
+              clname: "", //classname判断几张图样式不一样
+              portrait: "", //头像
+              id: "",
+            }
+            data.content = results[i].content; //文字内容
+            data.name = results[i].name; //发言的用户名字
+            data.picList = results[i].picList; //发布的图片
+            data.portrait = results[i].portrait; //头像
+            data.type = results[i].type; //标签类型
+            data.tipHot = results[i].tipHot; //标签热度
+            data.id = results[i].objectId; //id
+            data.commentNum = results[i].commentNum //评论数量
+            if (data.picList && data.picList.length == 1) {
+              data.clname = "picOne"
+            } else if (data.picList && data.picList.length == 2) {
+              data.clname = "picTwo"
+            } else if (data.picList && data.picList.length >= 2) {
+              data.clname = "picThree"
+            };
+            data.createAt = results[i].createdAt;
+            _this.shuoData.push(data);
+          };
+          _this.zanwuOff = _this.shuoData.length == 0 ? true : false;
         })
       },
       //===========================

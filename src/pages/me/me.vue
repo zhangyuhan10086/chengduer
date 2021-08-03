@@ -1,7 +1,7 @@
 <template>
   <div v-pageTitle="{content:this.pageTitle}">
     <div class="main" ref="domx">
-      <div class="header_user">
+      <div class="header_user" @click="toDynamic">
         <div class="wai" flex>
           <div class="icon">
             <img :src="portrait">
